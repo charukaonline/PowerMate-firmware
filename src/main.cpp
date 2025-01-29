@@ -1,18 +1,30 @@
-#include <Arduino.h>
+#include <WiFi.h>
 
-// put function declarations here:
-int myFunction(int, int);
+// Define the network credentials
+const char *ssid = "ESP32_Hotspot";
+const char *password = "password123";
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+  // Start Serial Monitor for debugging
+  Serial.begin(115200);
+  Serial.println("Starting Access Point...");
+
+  // Start the Wi-Fi as an access point
+  WiFi.softAP(ssid, password);
+
+  // Print the IP address
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("Access Point IP Address: ");
+  Serial.println(IP);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-}
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+  // Blink the onboard LED to indicate the ESP32 is running
+  const int ledPin = 2;
+  pinMode(ledPin, OUTPUT);
+  
+  digitalWrite(ledPin, HIGH);
+  delay(500);
+  digitalWrite(ledPin, LOW);
+  delay(500);
 }

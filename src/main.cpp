@@ -1,58 +1,92 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include "./sensors/ultrasonic_sensor.h"
+#include "./sensors/temp_sensor.h"
 
-#define echoPin 2  
-#define trigPin 4     
+// WiFi credentials
 const char* ssid = "CNK2";
 const char* password = "fibre2403";
-const char* serverUrl = "http://192.168.1.37:5000/api/distance";
 
-long duration;
-float distance;
+// Server URLs
+const char* serverUrlDistance = "http://192.168.1.37:5000/api/distance";
+const char* serverUrlDHT11 = "http://192.168.1.37:5000/api/dht11";
 
-void setup(){
+// Create instances for the sensors
+HC_SR04 hc_sr04(4, 2);  // HC-SR04 (Trig Pin, Echo Pin)
+DHT11_Sensor dht11(17); // DHT11 (Pin 17)
+
+void setup() {
   Serial.begin(115200);
-  WiFi.begin(ssid, password);
 
+  // Connect to WiFi
+  WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Connecting to WiFi...");
   }
   Serial.println("Connected to WiFi");
 
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
+  // Initialize DHT11 sensor
+  dht11.begin();
 }
 
-void loop(){
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  
-  duration = pulseIn(echoPin, HIGH);
-  distance = duration / 58.2;
-
+void loop() {
+  // HC-SR04 Distance measurement
+  float distance = hc_sr04.getDistance();
   Serial.print("Distance: ");
   Serial.print(distance);
   Serial.println(" cm");
 
+  // DHT11 Temperature and Humidity readings
+  float tempC = dht11.getTemperatureC();
+  float tempF = dht11.getTemperatureF();
+  float humidity = dht11.getHumidity();
+
+  Serial.print("Temp: ");
+  Serial.print(tempC);
+  Serial.print(" C, ");
+  Serial.print(tempF);
+  Serial.print(" F, Hum: ");
+  Serial.print(humidity);
+  Serial.println("%");
+
+  // Sending distance data to the server (API for Distance)
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
-    http.begin(serverUrl);
+    http.begin(serverUrlDistance); // Distance API
     http.addHeader("Content-Type", "application/json");
 
-    String jsonPayload = "{\"value\":" + String(distance) + "}";
-    int httpResponseCode = http.POST(jsonPayload);
+    String jsonPayloadDistance = "{\"distance\":" + String(distance, 2) + "}";
+    int httpResponseCode = http.POST(jsonPayloadDistance);
 
-    Serial.print("HTTP Response code: ");
+    Serial.print("Distance HTTP Response code: ");
     Serial.println(httpResponseCode);
-
+    if (httpResponseCode != 200) {
+      Serial.println("Error sending data to /api/distance");
+    }
     http.end();
   } else {
     Serial.println("WiFi Disconnected");
   }
 
-  delay(5000);
+  // Sending DHT11 sensor data to the server (API for DHT11)
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(serverUrlDHT11); // DHT11 API
+    http.addHeader("Content-Type", "application/json");
+
+    String jsonPayloadDHT11 = "{\"temperatureC\":" + String(tempC, 2) + ",\"temperatureF\":" + String(tempF, 2) + ",\"humidity\":" + String(humidity, 2) + "}";
+    int httpResponseCode = http.POST(jsonPayloadDHT11);
+
+    Serial.print("DHT11 HTTP Response code: ");
+    Serial.println(httpResponseCode);
+    if (httpResponseCode != 200) {
+      Serial.println("Error sending data to /api/dht11");
+    }
+    http.end();
+  } else {
+    Serial.println("WiFi Disconnected");
+  }
+
+  delay(5000);  // Delay before the next loop
 }

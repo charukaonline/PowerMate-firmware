@@ -9,7 +9,7 @@ const char* password = "fibre2403";
 
 // Server URLs
 const char* serverUrlDistance = "http://192.168.1.37:5000/api/distance";
-const char* serverUrlDHT11 = "http://192.168.1.37:5000/api/dht11";
+const char* serverUrlDHT11 = "http://192.168.1.37:5000/api/temperature";
 
 // Create instances for the sensors
 HC_SR04 hc_sr04(4, 2);  // HC-SR04 (Trig Pin, Echo Pin)
@@ -81,7 +81,7 @@ void loop() {
     Serial.print("DHT11 HTTP Response code: ");
     Serial.println(httpResponseCode);
     if (httpResponseCode != 200) {
-      Serial.println("Error sending data to /api/dht11");
+      Serial.println("Error sending data to /api/temperature");
     }
     http.end();
   } else {

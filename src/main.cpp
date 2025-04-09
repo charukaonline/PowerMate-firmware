@@ -3,8 +3,8 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include "./sensors/ultrasonic_sensor.h"
-#include "./sensors/temp_sensor.h"
-#include "./sensors/battery_sensor.h"  // Renamed from PowerSensor
+#include "./sensors/ds18b20_sensor.h" // Changed from temp_sensor.h
+#include "./sensors/power_sensor.h" 
 
 // WiFi credentials
 const char* ssid = "CNK2";
@@ -14,8 +14,8 @@ const char* password = "fibre2403";
 const char* serverBaseUrl = "http://192.168.1.29:5000/api";
 const char* serverUrlAuth = "http://192.168.1.29:5000/api/auth/device";
 const char* serverUrlDistance = "http://192.168.1.29:5000/api/distance";
-const char* serverUrlDHT11 = "http://192.168.1.29:5000/api/temperature";
-const char* serverUrlBattery = "http://192.168.1.29:5000/api/battery"; // New API for battery readings
+const char* serverUrlTemp = "http://192.168.1.29:5000/api/temperature"; // Renamed from serverUrlDHT11
+const char* serverUrlPower = "http://192.168.1.29:5000/api/power";
 
 // Device credentials
 const char* deviceId = "PowerMate-ESP32-001";
@@ -26,8 +26,8 @@ String authToken = "";
 
 // Create instances for the sensors
 HC_SR04 hc_sr04(4, 2);   // HC-SR04 (Trig Pin, Echo Pin)
-DHT11_Sensor dht11(18);  // DHT11 (Pin 17)
-BatterySensor batterySensor(16, 17); // BatterySensor (RX, TX)
+DS18B20_Sensor ds18b20(18);  // DS18B20 on pin 18 (same pin as previous DHT11)
+PowerSensor powerSensor(16, 17); // PowerSensor (RX, TX)
 
 // Function to authenticate device and get token
 bool authenticateDevice() {
@@ -109,8 +109,8 @@ void setup() {
         Serial.println("Initial authentication failed!");
     }
 
-    dht11.begin();
-    batterySensor.begin();
+    ds18b20.begin(); // Changed from dht11.begin()
+    powerSensor.begin();
 }
 
 void loop() {
@@ -120,18 +120,15 @@ void loop() {
     Serial.print(distance);
     Serial.println(" cm");
 
-    // DHT11 Temperature and Humidity readings
-    float tempC = dht11.getTemperatureC();
-    float tempF = dht11.getTemperatureF();
-    float humidity = dht11.getHumidity();
+    // DS18B20 Temperature readings (no humidity)
+    float tempC = ds18b20.getTemperatureC();
+    float tempF = ds18b20.getTemperatureF();
 
     Serial.print("Temp: ");
     Serial.print(tempC);
     Serial.print(" C, ");
     Serial.print(tempF);
-    Serial.print(" F, Hum: ");
-    Serial.print(humidity);
-    Serial.println("%");
+    Serial.println(" F");
 
     // Sending distance data to the server
     String jsonPayloadDistance = "{\"distance\":" + String(distance, 2) + "}";
@@ -139,29 +136,32 @@ void loop() {
         Serial.println("Error sending data to /api/distance");
     }
 
-    // Sending DHT11 sensor data to the server
-    String jsonPayloadDHT11 = "{\"temperatureC\":" + String(tempC, 2) + 
-                           ",\"temperatureF\":" + String(tempF, 2) + 
-                           ",\"humidity\":" + String(humidity, 2) + "}";
-    if (!sendDataToAPI(serverUrlDHT11, jsonPayloadDHT11)) {
+    // Sending Temperature sensor data to the server (no humidity)
+    String jsonPayloadTemp = "{\"temperatureC\":" + String(tempC, 2) + 
+                          ",\"temperatureF\":" + String(tempF, 2) + "}";
+    if (!sendDataToAPI(serverUrlTemp, jsonPayloadTemp)) {
         Serial.println("Error sending data to /api/temperature");
     }
 
-    // BatterySensor: Voltage, Current, Battery Percentage
-    float voltage, current, batteryPercentage;
-    if (batterySensor.readValues(voltage, current, batteryPercentage)) {
-        Serial.print("Voltage: ");
-        Serial.print(voltage);
-        Serial.print(" V | Current: ");
-        Serial.print(current);
+    // Power Sensor measurements (no changes)
+    float dcVoltage, dcCurrent, batteryVoltage, batteryCurrent, batteryPercentage;
+    if (powerSensor.readValues(dcVoltage, dcCurrent, batteryVoltage, batteryCurrent, batteryPercentage)) {
+        Serial.print("DC: ");
+        Serial.print(dcVoltage);
+        Serial.print(" V, ");
+        Serial.print(dcCurrent);
         Serial.print(" A | Battery: ");
+        Serial.print(batteryVoltage);
+        Serial.print(" V, ");
+        Serial.print(batteryCurrent);
+        Serial.print(" A, ");
         Serial.print(batteryPercentage);
         Serial.println("%");
 
-        // Send battery readings to API
-        String jsonPayloadBattery = batterySensor.getJSON(voltage, current, batteryPercentage);
-        if (!sendDataToAPI(serverUrlBattery, jsonPayloadBattery)) {
-            Serial.println("Error sending battery data to /api/battery");
+        // Send power readings to API
+        String jsonPayloadPower = powerSensor.getJSON(dcVoltage, dcCurrent, batteryVoltage, batteryCurrent, batteryPercentage);
+        if (!sendDataToAPI(serverUrlPower, jsonPayloadPower)) {
+            Serial.println("Error sending power data to /api/power");
         }
     }
 

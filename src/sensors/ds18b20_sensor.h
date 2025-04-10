@@ -5,13 +5,13 @@
 #include <DallasTemperature.h>
 
 class DS18B20_Sensor {
-  private:
+private:
     int pin;
-    OneWire oneWire;
-    DallasTemperature sensors;
+    OneWire* oneWire;
+    DallasTemperature* sensors;
 
-  public:
-    DS18B20_Sensor(int sensorPin);
+public:
+    DS18B20_Sensor(int dataPin);
     void begin();
     float getTemperatureC();
     float getTemperatureF();

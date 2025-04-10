@@ -1,19 +1,20 @@
 #include "ds18b20_sensor.h"
 
-DS18B20_Sensor::DS18B20_Sensor(int sensorPin) : oneWire(sensorPin), sensors(&oneWire) {
-  pin = sensorPin;
+DS18B20_Sensor::DS18B20_Sensor(int dataPin) : pin(dataPin) {
+    oneWire = new OneWire(pin);
+    sensors = new DallasTemperature(oneWire);
 }
 
 void DS18B20_Sensor::begin() {
-  sensors.begin();
+    sensors->begin();
 }
 
 float DS18B20_Sensor::getTemperatureC() {
-  sensors.requestTemperatures(); // Send the command to get temperatures
-  return sensors.getTempCByIndex(0); // Get temperature from first sensor
+    sensors->requestTemperatures(); 
+    return sensors->getTempCByIndex(0); // Get temperature in Celsius
 }
 
 float DS18B20_Sensor::getTemperatureF() {
-  sensors.requestTemperatures(); // Send the command to get temperatures
-  return sensors.getTempFByIndex(0); // Get temperature in Fahrenheit
+    sensors->requestTemperatures(); 
+    return sensors->getTempFByIndex(0); // Get temperature in Fahrenheit
 }

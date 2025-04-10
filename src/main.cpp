@@ -18,8 +18,8 @@ const char* serverUrlTemp = "http://192.168.1.29:5000/api/temperature"; // Renam
 const char* serverUrlPower = "http://192.168.1.29:5000/api/power";
 
 // Device credentials
-const char* deviceId = "PowerMate-ESP32-001";
-const char* deviceSecret = "deviceSecret1";
+const char* deviceId = "tower1";
+const char* deviceSecret = "cnk12345";
 
 // JWT token received from server
 String authToken = "";
@@ -43,6 +43,7 @@ bool authenticateDevice() {
     String jsonPayload = "{\"deviceId\":\"" + String(deviceId) + "\",\"deviceSecret\":\"" + String(deviceSecret) + "\"}";
 
     int httpResponseCode = http.POST(jsonPayload);
+    bool success = false;
 
     if (httpResponseCode == 200) {
         String response = http.getString();
@@ -52,14 +53,25 @@ bool authenticateDevice() {
 
         authToken = doc["token"].as<String>();
         Serial.println("Device authenticated successfully");
-        return true;
+        success = true;
     } else {
         Serial.print("Authentication failed, HTTP response code: ");
         Serial.println(httpResponseCode);
-        return false;
     }
 
     http.end();
+    return success;
+}
+
+// Add this function to test basic server connectivity
+bool testServerConnectivity() {
+    HTTPClient http;
+    http.begin(serverBaseUrl);
+    int httpCode = http.GET();
+    Serial.print("Server connectivity test: ");
+    Serial.println(httpCode);
+    http.end();
+    return httpCode > 0;
 }
 
 // Function to send data to API with authentication
@@ -104,6 +116,15 @@ void setup() {
         Serial.println("Connecting to WiFi...");
     }
     Serial.println("Connected to WiFi");
+
+    // Add this in setup() after WiFi connection
+    Serial.print("Connected to WiFi. IP address: ");
+    Serial.println(WiFi.localIP());
+    Serial.print("Attempting to connect to server at: ");
+    Serial.println(serverBaseUrl);
+    if (!testServerConnectivity()) {
+        Serial.println("Warning: Cannot reach server!");
+    }
 
     if (!authenticateDevice()) {
         Serial.println("Initial authentication failed!");

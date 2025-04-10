@@ -11,11 +11,11 @@ const char* ssid = "CNK2";
 const char* password = "fibre2403";
 
 // Server URLs
-const char* serverBaseUrl = "http://192.168.1.29:5000/api";
-const char* serverUrlAuth = "http://192.168.1.29:5000/api/auth/device";
-const char* serverUrlDistance = "http://192.168.1.29:5000/api/distance";
-const char* serverUrlTemp = "http://192.168.1.29:5000/api/temperature"; // Renamed from serverUrlDHT11
-const char* serverUrlPower = "http://192.168.1.29:5000/api/power";
+const char* serverBaseUrl = "http://192.168.1.37:5000/api";
+const char* serverUrlAuth = "http://192.168.1.37:5000/api/auth/device";
+const char* serverUrlDistance = "http://192.168.1.37:5000/api/distance";
+const char* serverUrlTemp = "http://192.168.1.37:5000/api/temperature";
+const char* serverUrlPower = "http://192.168.1.37:5000/api/power";
 
 // Device credentials
 const char* deviceId = "tower1";

@@ -45,7 +45,7 @@ bool authenticateDevice()
     DynamicJsonDocument doc(200);
     doc["deviceId"] = deviceId;
     // You might want to add a device secret or key here
-    doc["deviceType"] = "temperature_sensor";
+    doc["deviceType"] = "esp32-02";
 
     String requestBody;
     serializeJson(doc, requestBody);

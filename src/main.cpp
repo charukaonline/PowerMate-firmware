@@ -1,30 +1,27 @@
-#include <WiFi.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
-// Define the network credentials
-const char *ssid = "ESP32_Hotspot";
-const char *password = "password123";
+// Data wire is connected to GPIO4 (can be changed)
+#define ONE_WIRE_BUS 14
 
-void setup() {
-  // Start Serial Monitor for debugging
-  Serial.begin(115200);
-  Serial.println("Starting Access Point...");
+// Setup oneWire and DallasTemperature
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
 
-  // Start the Wi-Fi as an access point
-  WiFi.softAP(ssid, password);
-
-  // Print the IP address
-  IPAddress IP = WiFi.softAPIP();
-  Serial.print("Access Point IP Address: ");
-  Serial.println(IP);
+void setup()
+{
+    Serial.begin(115200);
+    sensors.begin();
 }
 
-void loop() {
-  // Blink the onboard LED to indicate the ESP32 is running
-  const int ledPin = 2;
-  pinMode(ledPin, OUTPUT);
-  
-  digitalWrite(ledPin, HIGH);
-  delay(500);
-  digitalWrite(ledPin, LOW);
-  delay(500);
+void loop()
+{
+    sensors.requestTemperatures();            // Send the command to get temperatures
+    float tempC = sensors.getTempCByIndex(0); // Get temperature of first sensor
+
+    Serial.print("Temperature: ");
+    Serial.print(tempC);
+    Serial.println(" °C");
+
+    delay(1000);
 }

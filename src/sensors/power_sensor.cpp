@@ -23,6 +23,9 @@ bool PowerSensor::readValues(float &dcVoltage, float &dcCurrent, float &batteryV
         String receivedData = Serial2.readStringUntil('\n');
         receivedData.trim(); // Remove any whitespace or newline characters
         
+        // Debug the received data
+        Serial.println("Received data: " + receivedData);
+        
         // Check if it's the comma-separated format (from essential.md)
         if (receivedData.indexOf(',') != -1 && receivedData.indexOf("DC:") == -1) {
             // Parse the comma-separated values format: dcV,dcA,batV,batA
@@ -85,10 +88,65 @@ bool PowerSensor::readValues(float &dcVoltage, float &dcCurrent, float &batteryV
                 return true;
             }
         }
+        // Handle the format without "DC:" prefix: "[dcV] V, [dcA] A | Battery: [batV] V, [batA] A"
+        else if (receivedData.indexOf(" V, ") != -1 && receivedData.indexOf(" A | Battery: ") != -1) {
+            // Extract DC part (at the beginning)
+            int dcCommaPos = receivedData.indexOf(" V, ");
+            int dcAPos = receivedData.indexOf(" A | Battery: ");
+            
+            if (dcCommaPos != -1 && dcAPos != -1) {
+                // Parse DC voltage
+                String dcVoltStr = receivedData.substring(0, dcCommaPos);
+                dcVoltage = dcVoltStr.toFloat();
+                
+                // Parse DC current
+                String dcCurrStr = receivedData.substring(dcCommaPos + 4, dcAPos);
+                dcCurrent = dcCurrStr.toFloat();
+                
+                // Extract Battery part
+                String batPart = receivedData.substring(dcAPos + 13);
+                int batCommaPos = batPart.indexOf(" V, ");
+                
+                if (batCommaPos != -1) {
+                    // Parse Battery voltage
+                    String batVoltStr = batPart.substring(0, batCommaPos);
+                    batteryVoltage = batVoltStr.toFloat();
+                    
+                    // Parse Battery current
+                    String batCurrStr = batPart.substring(batCommaPos + 4);
+                    batCurrStr.replace(" A", "");
+                    batteryCurrent = batCurrStr.toFloat();
+                    
+                    // Calculate battery percentage
+                    batteryPercentage = calculateBatteryPercentage(batteryVoltage);
+                    
+                    // Store last valid readings
+                    lastDcVoltage = dcVoltage;
+                    lastDcCurrent = dcCurrent;
+                    lastBatteryVoltage = batteryVoltage;
+                    lastBatteryCurrent = batteryCurrent;
+                    lastBatteryPercentage = batteryPercentage;
+                    
+                    return true;
+                }
+            }
+        }
         
         // If we got here, the format wasn't recognized
         Serial.println("Unrecognized data format received: " + receivedData);
     }
+    
+    // If we failed to get new readings but have previous valid ones, use those
+    if (lastDcVoltage > 0 && lastBatteryVoltage > 0) {
+        Serial.println("Using last valid power readings");
+        dcVoltage = lastDcVoltage;
+        dcCurrent = lastDcCurrent;
+        batteryVoltage = lastBatteryVoltage;
+        batteryCurrent = lastBatteryCurrent;
+        batteryPercentage = lastBatteryPercentage;
+        return true;
+    }
+    
     return false;
 }
 

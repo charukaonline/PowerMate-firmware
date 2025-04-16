@@ -7,6 +7,13 @@ class PowerSensor {
 private:
     int rxPin, txPin;
     
+    // Last valid readings
+    float lastDcVoltage = 0;
+    float lastDcCurrent = 0;
+    float lastBatteryVoltage = 0;
+    float lastBatteryCurrent = 0;
+    float lastBatteryPercentage = 0;
+    
 public:
     PowerSensor(int rx, int tx);
     void begin();

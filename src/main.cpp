@@ -3,7 +3,6 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include "./sensors/ultrasonic_sensor.h"
-#include "./sensors/ds18b20_sensor.h" // Changed from temp_sensor.h
 #include "./sensors/power_sensor.h" 
 
 // WiFi credentials
@@ -15,11 +14,10 @@ const char* serverUrlSensorData = "http://192.168.1.37:5000/api/sensor-data/data
 
 // Create instances for the sensors
 HC_SR04 hc_sr04(4, 2);   // HC-SR04 (Trig Pin, Echo Pin)
-DS18B20_Sensor ds18b20(18);  // DS18B20 on pin 18
 PowerSensor powerSensor(16, 17); // PowerSensor (RX, TX)
 
 // Simplified function to send sensor data without device ID
-bool sendAllSensorData(float distance, float tempC, float tempF, 
+bool sendAllSensorData(float distance,
                       float dcVoltage, float dcCurrent,
                       float batteryVoltage, float batteryCurrent, float batteryPercentage) {
     if (WiFi.status() != WL_CONNECTED) {
@@ -33,12 +31,6 @@ bool sendAllSensorData(float distance, float tempC, float tempF,
     // Add distance data
     JsonObject distanceObj = doc.createNestedObject("distance");
     distanceObj["distance"] = distance;
-
-    // Add temperature data
-    JsonObject temperatureObj = doc.createNestedObject("temperature");
-    temperatureObj["temperatureC"] = tempC;
-    temperatureObj["temperatureF"] = tempF;
-    temperatureObj["humidity"] = 0; // Adding humidity field with default value 0
 
     // Add DC power data
     JsonObject dcPowerObj = doc.createNestedObject("dcPower");
@@ -107,7 +99,6 @@ void setup() {
     }
     
     // Initialize sensors
-    ds18b20.begin();
     powerSensor.begin();
 }
 
@@ -118,15 +109,6 @@ void loop() {
     Serial.print("Distance: ");
     Serial.print(distance);
     Serial.println(" cm");
-
-    // DS18B20 Temperature readings
-    float tempC = ds18b20.getTemperatureC();
-    float tempF = ds18b20.getTemperatureF();
-    Serial.print("Temp: ");
-    Serial.print(tempC);
-    Serial.print(" C, ");
-    Serial.print(tempF);
-    Serial.println(" F");
 
     // Power Sensor measurements
     float dcVoltage = 0, dcCurrent = 0, batteryVoltage = 0, batteryCurrent = 0, batteryPercentage = 0;
@@ -151,10 +133,10 @@ void loop() {
     }
 
     // Only send data if we have valid readings
-    if (powerReadSuccess && tempC > -100) {  // Basic check to filter out invalid temperature readings
+    if (powerReadSuccess) {  // Basic check to filter out invalid temperature readings
         // Send all data in one API call
         if (!sendAllSensorData(
-                distance, tempC, tempF, 
+                distance, 
                 dcVoltage, dcCurrent, 
                 batteryVoltage, batteryCurrent, batteryPercentage)) {
             Serial.println("Error sending data to unified API endpoint");

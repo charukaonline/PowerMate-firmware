@@ -17,7 +17,7 @@ String deviceId;
 String authToken;
 bool isAuthenticated = false;
 
-// Data wire is connected to GPIO4 (can be changed)
+// Data wire
 #define ONE_WIRE_BUS 14
 
 // Setup oneWire and DallasTemperature
@@ -44,7 +44,6 @@ bool authenticateDevice()
     // Create authentication request
     DynamicJsonDocument doc(200);
     doc["deviceId"] = deviceId;
-    // You might want to add a device secret or key here
     doc["deviceType"] = "esp32-02";
 
     String requestBody;
@@ -108,7 +107,7 @@ void setup()
 
 void sendTemperatureData(float temperature)
 {
-    // First check if we're authenticated
+    // First check if authenticated
     if (!isAuthenticated)
     {
         Serial.println("Not authenticated. Attempting to authenticate...");
@@ -155,7 +154,7 @@ void sendTemperatureData(float temperature)
         {
             Serial.println("Auth token expired or invalid. Reauthenticating...");
             isAuthenticated = false;
-            // Will try again in the next loop
+            // Will try again in next loop
         }
         else
         {
@@ -174,8 +173,8 @@ void sendTemperatureData(float temperature)
 
 void loop()
 {
-    sensors.requestTemperatures();            // Send the command to get temperatures
-    float tempC = sensors.getTempCByIndex(0); // Get temperature of first sensor
+    sensors.requestTemperatures();
+    float tempC = sensors.getTempCByIndex(0);
 
     Serial.print("Temperature: ");
     Serial.print(tempC);

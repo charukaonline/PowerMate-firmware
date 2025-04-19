@@ -1,4 +1,3 @@
-// For your ESP32 main.cpp
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
@@ -81,7 +80,7 @@ bool authenticateDevice()
     return false;
 }
 
-// Simplified function to send sensor data with device authentication
+// function to send sensor data with device authentication
 bool sendAllSensorData(float distance,
                        float dcVoltage, float dcCurrent,
                        float batteryVoltage, float batteryCurrent, float batteryPercentage)
@@ -151,12 +150,12 @@ bool sendAllSensorData(float distance,
         {
             Serial.println("Auth token expired or invalid. Reauthenticating...");
             isAuthenticated = false;
-            // Will try again in the next loop
+            // try again in the next loop
         }
     }
     else
     {
-        // Print detailed error based on error code
+        // detailed error based on error code
         Serial.print("Error sending HTTP request. Error code: ");
         Serial.print("Error description: ");
         if (httpResponseCode == -1)
@@ -180,7 +179,7 @@ void setup()
     // Connect to WiFi
     WiFi.begin(ssid, password);
 
-    // Set timeout for WiFi connection - add 10 second timeout
+    // add 10 second timeout
     unsigned long startTime = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - startTime < 10000)
     {
@@ -250,7 +249,7 @@ void loop()
 
     // Only send data if we have valid readings
     if (powerReadSuccess)
-    { // Basic check to filter out invalid readings
+    {
         // Send all data in one API call
         if (!sendAllSensorData(
                 distance,

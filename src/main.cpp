@@ -9,8 +9,8 @@ const char *ssid = "CNK2";
 const char *password = "fibre2403";
 
 // Server URLs
-const char *serverUrlSensorData = "http://192.168.1.37:5000/api/sensor-data/temp-data";
-const char *serverUrlAuth = "http://192.168.1.37:5000/api/auth/device";
+const char *serverUrlSensorData = "https://iot.cnkthedev.xyz/api/sensor-data/temp-data";
+const char *serverUrlAuth = "https://iot.cnkthedev.xyz/api/auth/device";
 
 // Authentication
 String deviceId;

@@ -9,8 +9,8 @@ const char *ssid = "CNK2";
 const char *password = "fibre2403";
 
 // Server URLs
-const char *serverUrlSensorData = "http://192.168.1.37:5000/api/sensor-data/data";
-const char *serverUrlAuth = "http://192.168.1.37:5000/api/auth/device";
+const char *serverUrlSensorData = "https://iot.cnkthedev.xyz/api/sensor-data/data";
+const char *serverUrlAuth = "https://iot.cnkthedev.xyz/api/auth/device";
 
 // Create instances for the sensors
 HC_SR04 hc_sr04(4, 2);           // HC-SR04 (Trig Pin, Echo Pin)
